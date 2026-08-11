@@ -17,6 +17,8 @@ Option Explicit
 '--- CLSID / IID -------------------------------------------------------------
 Private Const CLSID_CUIAutomation As String = "{ff48dba4-60ef-4201-aa87-54103eef594e}"
 Private Const IID_IUIAutomation As String = "{30cbe57d-d9d0-452a-ab13-7ac5ac4825ee}"
+Public Const IID_IUIAutomationElement3 As String = "{8471df34-aee0-4a01-a7de-7db9af12c296}"
+Public Const IID_IUIAutomationElement9 As String = "{39325fac-039d-440e-a3a3-5eb81a5cecc3}"
 
 '--- ポインタ幅 / VARENUM -----------------------------------------------------
 #If Win64 Then
@@ -76,6 +78,15 @@ Public Const UIA_ClassNamePropertyId As Long = 30012
 Public Const UIA_NativeWindowHandlePropertyId As Long = 30020
 Public Const UIA_ValueValuePropertyId As Long = 30045
 Public Const UIA_ToggleToggleStatePropertyId As Long = 30086
+Public Const UIA_ExpandCollapseExpandCollapseStatePropertyId As Long = 30070
+Public Const UIA_ScrollHorizontalScrollPercentPropertyId As Long = 30053
+Public Const UIA_ScrollVerticalScrollPercentPropertyId As Long = 30055
+Public Const UIA_IsInvokePatternAvailablePropertyId As Long = 30031
+Public Const UIA_IsValuePatternAvailablePropertyId As Long = 30043
+Public Const UIA_IsTextPatternAvailablePropertyId As Long = 30040
+Public Const UIA_IsTextPattern2AvailablePropertyId As Long = 30119
+Public Const UIA_IsTextChildPatternAvailablePropertyId As Long = 30136
+Public Const UIA_IsTextEditPatternAvailablePropertyId As Long = 30149
 
 ' --- ControlType Id ---
 Public Const UIA_ButtonControlTypeId As Long = 50000
@@ -124,18 +135,38 @@ Public Const UIA_AppBarControlTypeId As Long = 50040
 Public Const UIA_InvokePatternId As Long = 10000
 Public Const UIA_SelectionPatternId As Long = 10001
 Public Const UIA_ValuePatternId As Long = 10002
+Public Const UIA_RangeValuePatternId As Long = 10003
 Public Const UIA_ScrollPatternId As Long = 10004
 Public Const UIA_ExpandCollapsePatternId As Long = 10005
 Public Const UIA_GridPatternId As Long = 10006
 Public Const UIA_GridItemPatternId As Long = 10007
+Public Const UIA_MultipleViewPatternId As Long = 10008
+Public Const UIA_WindowPatternId As Long = 10009
 Public Const UIA_SelectionItemPatternId As Long = 10010
+Public Const UIA_DockPatternId As Long = 10011
 Public Const UIA_TablePatternId As Long = 10012
+Public Const UIA_TableItemPatternId As Long = 10013
 Public Const UIA_TextPatternId As Long = 10014
 Public Const UIA_TogglePatternId As Long = 10015
+Public Const UIA_TransformPatternId As Long = 10016
 Public Const UIA_ScrollItemPatternId As Long = 10017
-Public Const UIA_WindowPatternId As Long = 10009
+Public Const UIA_LegacyIAccessiblePatternId As Long = 10018
+Public Const UIA_ItemContainerPatternId As Long = 10019
+Public Const UIA_VirtualizedItemPatternId As Long = 10020
+Public Const UIA_SynchronizedInputPatternId As Long = 10021
+Public Const UIA_ObjectModelPatternId As Long = 10022
+Public Const UIA_AnnotationPatternId As Long = 10023
+Public Const UIA_TextPattern2Id As Long = 10024
+Public Const UIA_StylesPatternId As Long = 10025
+Public Const UIA_SpreadsheetPatternId As Long = 10026
+Public Const UIA_SpreadsheetItemPatternId As Long = 10027
+Public Const UIA_TransformPattern2Id As Long = 10028
 Public Const UIA_TextChildPatternId As Long = 10029
+Public Const UIA_DragPatternId As Long = 10030
+Public Const UIA_DropTargetPatternId As Long = 10031
 Public Const UIA_TextEditPatternId As Long = 10032
+Public Const UIA_CustomNavigationPatternId As Long = 10033
+Public Const UIA_SelectionPattern2Id As Long = 10034
 
 ' --- PropertyConditionFlags ---
 Public Const PropertyConditionFlags_None As Long = 0
@@ -191,6 +222,9 @@ Public Declare PtrSafe Function SafeArrayGetUBound Lib "oleaut32" ( _
 Public Declare PtrSafe Function SafeArrayGetElement Lib "oleaut32" ( _
     ByVal psa As LongPtr, ByRef rgIndices As Long, ByRef pv As Any) As Long
 Public Declare PtrSafe Function SafeArrayDestroy Lib "oleaut32" (ByVal psa As LongPtr) As Long
+Private Declare PtrSafe Sub Sleep_API Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
+Private Declare PtrSafe Function GetCursorPos Lib "user32" ( _
+    ByRef lpPoint As tagPOINT) As Long
 Private Declare PtrSafe Function FormatMessageW Lib "kernel32" ( _
     ByVal dwFlags As Long, ByVal lpSource As LongPtr, ByVal dwMessageId As Long, _
     ByVal dwLanguageId As Long, ByVal lpBuffer As LongPtr, ByVal nSize As Long, _
@@ -366,6 +400,78 @@ Public Function CreateFalseCondition() As LongPtr
     UiaCheck UiaInvoke(UIA(), 22, "P", VarPtr(p)), "CreateFalseCondition"
     CreateFalseCondition = p
 End Function
+
+'==============================================================================
+' 要素 / パターン / 座標 ヘルパ ― uia_e から使う
+'==============================================================================
+
+' 要素のプロパティ値 (VARIANT) を取得する。GetCurrentPropertyValue = vtable[10]。
+Public Function GetPropertyValue(ByVal pElem As LongPtr, ByVal propId As Long) As Variant
+    Dim v As Variant
+    uia_core.UiaCheck UiaInvoke(pElem, 10, "LP", propId, VarPtr(v)), _
+                      "IUIAutomationElement.GetCurrentPropertyValue"
+    GetPropertyValue = v
+End Function
+
+' 要素のパターンを取得する。GetCurrentPattern = vtable[16]。未サポートなら 0。
+' 戻り値は AddRef 済み。呼び出し側で ComRelease すること。
+Public Function GetPattern(ByVal pElem As LongPtr, ByVal patternId As Long) As LongPtr
+    Dim p As LongPtr
+    uia_core.UiaCheck UiaInvoke(pElem, 16, "LP", patternId, VarPtr(p)), _
+                      "IUIAutomationElement.GetCurrentPattern"
+    GetPattern = p
+End Function
+
+' 要素の矩形。get_CurrentBoundingRectangle = vtable[43]。RECT(LONG x4) を受ける。
+Public Function GetBoundingRect(ByVal pElem As LongPtr) As tagRECT
+    Dim b(0 To 3) As Long
+    uia_core.UiaCheck UiaInvoke(pElem, 43, "P", VarPtr(b(0))), _
+                      "IUIAutomationElement.get_CurrentBoundingRectangle"
+    GetBoundingRect.Left = b(0)
+    GetBoundingRect.Top = b(1)
+    GetBoundingRect.Right = b(2)
+    GetBoundingRect.Bottom = b(3)
+End Function
+
+' [out] Long を1個返すメソッドをラップする。
+Public Function InvokeLong(ByVal pThis As LongPtr, ByVal vtblIndex As Long, _
+                           ByVal context As String) As Long
+    Dim v As Long
+    uia_core.UiaCheck UiaInvoke(pThis, vtblIndex, "P", VarPtr(v)), context
+    InvokeLong = v
+End Function
+
+' [out] インターフェースポインタを1個返すメソッドをラップする。戻り値は AddRef 済み。
+Public Function InvokeElem(ByVal pThis As LongPtr, ByVal vtblIndex As Long, _
+                           ByVal context As String) As LongPtr
+    Dim p As LongPtr
+    uia_core.UiaCheck UiaInvoke(pThis, vtblIndex, "P", VarPtr(p)), context
+    InvokeElem = p
+End Function
+
+' 座標から要素を取得する。ElementFromPoint = IUIAutomation vtable[7]。
+' POINT の値渡しは 32/64bit で ABI が違う (CopyMemory は使わず算術で組む)。
+Public Function ElementFromPoint(ByVal x As Long, ByVal y As Long) As LongPtr
+    Dim p As LongPtr
+#If Win64 Then
+    Dim packed As LongLong
+    packed = (CLngLng(y) * &H100000000^) Or (CLngLng(x) And &HFFFFFFFF^)
+    uia_core.UiaCheck UiaInvoke(UIA(), 7, "8P", packed, VarPtr(p)), "ElementFromPoint"
+#Else
+    uia_core.UiaCheck UiaInvoke(UIA(), 7, "LLP", x, y, VarPtr(p)), "ElementFromPoint"
+#End If
+    ElementFromPoint = p
+End Function
+
+' マウスカーソルの現在位置。
+Public Function CursorPos() As tagPOINT
+    GetCursorPos CursorPos
+End Function
+
+' 指定ミリ秒スリープする。
+Public Sub Sleep_(ByVal dwMilliseconds As Long)
+    Sleep_API dwMilliseconds
+End Sub
 
 '==============================================================================
 ' 文字列 / 配列
