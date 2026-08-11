@@ -235,7 +235,7 @@ Public Function UiaInvoke(ByVal pThis As LongPtr, ByVal vtblIndex As Long, _
         pArgs(i) = VarPtr(vArgs(i))
     Next i
 
-    hrCall = DispCallFunc(pThis, CLngPtr(vtblIndex) * PTR_SIZE, CC_STDCALL, _
+    hrCall = DispCallFunc(pThis, vtblIndex * PTR_SIZE, CC_STDCALL, _
                           VT_I4, n, vTypes(0), pArgs(0), vRet)
     If hrCall <> S_OK Then
         UiaInvoke = hrCall
@@ -268,9 +268,6 @@ Private Function CoerceArg(ByVal code As String, ByRef src As Variant, ByRef dst
     End Select
 End Function
 
-Private Function CLngPtr(ByVal v As Long) As LongPtr
-    CLngPtr = v
-End Function
 
 '==============================================================================
 ' IUnknown / ê∂ê¨ / GUID
