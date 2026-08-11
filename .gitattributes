@@ -1,0 +1,10 @@
+# VBA モジュールは VBE のインポート要件に合わせて必ず CRLF で取り出す。
+# (LF 単独だと .cls がクラスとして認識されず標準モジュールになる)
+# 文字コードは CP932。git は EOL しか触らないのでバイト内容は保たれる。
+*.bas text eol=crlf
+*.cls text eol=crlf
+
+# ドキュメントは LF。
+*.md  text eol=lf
+LICENSE     text eol=lf
+.gitignore  text eol=lf

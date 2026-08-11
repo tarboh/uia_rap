@@ -1,0 +1,22 @@
+# Claude Code のローカル設定・記憶
+.claude/
+
+# 作業用の Excel ブック (バイナリ / 個人データが混じりうるため公開しない)
+*.xlsm
+*.xlsb
+*.xlam
+*.xlsx
+
+# Office の一時・ロックファイル
+~$*
+*.tmp
+
+# Windows / OneDrive
+Thumbs.db
+desktop.ini
+*.lnk
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
