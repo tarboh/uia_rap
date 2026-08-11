@@ -19,7 +19,7 @@ Attribute VB_Exposed = True
 ' この段階 (第1弾) で移植済み:
 '   取得 / プロパティ / 検索(ff*/fa*) / TreeWalker / 基本パターン / 配列 / 座標
 ' 第2弾で移植済み: Edge*, IES_*(IEモード), ptValue_DLFile, GetTopWindow
-' 未移植: GetInfo/test 系 (開発用ダンプ。PollForPotentialSupportedProperties が要る)
+' 第3弾で移植済み: GetInfo/test 系 (開発用の要素情報ダンプ)
 '==============================================================================
 Option Explicit
 
@@ -977,3 +977,126 @@ Public Function GetTopWindow() As uia_e
     Loop
     Set GetTopWindow = e_
 End Function
+
+'==============================================================================
+' 開発用: 要素情報ダンプ / カーソル探査
+'==============================================================================
+
+Public Property Get prPtnAv_Invoke() As Boolean
+    If Alert_Nothing(m_elem, "prPtnAv_Invoke") Then Exit Property
+    prPtnAv_Invoke = CBool(uia_core.GetPropertyValue(m_elem, UIA_IsInvokePatternAvailablePropertyId))
+End Property
+
+' 要素がサポートするプロパティ / パターンをイミディエイトに一覧表示する。
+Public Sub GetInfo()
+    If Alert_Nothing(m_elem, "GetInfo") Then Exit Sub
+    SetImmediateCaretToEnd
+
+    Debug.Print "------------------------------"
+    Debug.Print "----------Property------------"
+    Debug.Print "------------------------------"
+
+    Dim l_Property() As Long, s_Property() As String, i As Long
+    uia_core.PollSupportedProperties m_elem, l_Property, s_Property
+    For i = 0 To UBound(l_Property)
+        If Not s_Property(i) Like "*Available" Then
+            If l_Property(i) <> 0 Then
+                Dim v As Variant, pname As String
+                v = uia_core.GetPropertyValue(m_elem, l_Property(i))
+                pname = String$(40, " ")
+                Mid$(pname, 1) = s_Property(i)
+                Select Case TypeName(v)
+                    Case "String"
+                        If CStr(v) <> "" Then Debug.Print pname & CStr(v)
+                    Case "Long", "Integer"
+                        If CLng(v) <> 0 Then
+                            If pname Like "ControlType*" Then
+                                Debug.Print pname & CLng(v) & "(" & prShortCtrlTypeName & ")"
+                            Else
+                                Debug.Print pname & CLng(v)
+                            End If
+                        End If
+                    Case "Boolean"
+                        If CBool(v) Then Debug.Print pname & CBool(v)
+                    Case "Double", "Single"
+                        If CDbl(v) <> 0 Then Debug.Print pname & CDbl(v)
+                    Case "Double()", "Long()", "Integer()", "Single()"
+                        Debug.Print pname & JoinVariantArray(v)
+                End Select
+            Else
+                Debug.Print s_Property(i)
+            End If
+        End If
+    Next
+
+    Debug.Print
+    Debug.Print "------------------------------"
+    Debug.Print "----------Pattern-------------"
+    Debug.Print "------------------------------"
+
+    Dim l_Pattern() As Long, s_Pattern() As String
+    uia_core.PollSupportedPatterns m_elem, l_Pattern, s_Pattern
+    For i = 0 To UBound(l_Pattern)
+        Debug.Print s_Pattern(i)
+    Next
+End Sub
+
+' 数値配列 (Variant) をカンマ区切り文字列にする。
+Private Function JoinVariantArray(v As Variant) As String
+    On Error Resume Next
+    Dim i As Long, s As String
+    For i = LBound(v) To UBound(v)
+        If Len(s) > 0 Then s = s & ","
+        s = s & CStr(v(i))
+    Next
+    JoinVariantArray = s
+End Function
+
+' カーソル直下の要素を CTRL で拾って情報表示し続ける。ALT で終了。
+Public Sub test()
+    TestMode = True
+    Dim e_ As New uia_e
+    e_.TestMode = True
+
+    SetImmediateCaretToEnd
+    Debug.Print "取得したい要素にカーソルを合わせて CTRL キーを押してください。"
+    Debug.Print "終了するには ALT キーを押してください。"
+
+    Do
+        If (uia_core.GetAsyncKeyState(vbKeyControl) And -32768) = -32768 Then
+            Set e_ = e_.GetFromCursor
+            e_.GetInfo
+            SetImmediateCaretToEnd
+            Debug.Print "取得したい要素にカーソルを合わせて CTRL キーを押してください。"
+            Debug.Print "終了するには ALT キーを押してください。"
+            uia_core.Sleep_ 300
+        ElseIf (uia_core.GetAsyncKeyState(vbKeyMenu) And -32768) = -32768 Then
+            Debug.Print "処理を終了します。"
+            Exit Do
+        End If
+        DoEvents
+        uia_core.Sleep_ 1
+    Loop
+
+    TestMode = False
+End Sub
+
+' イミディエイトウィンドウの末尾へキャレットを移動する (VBE アクセスが要る。失敗時は無視)。
+Private Sub SetImmediateCaretToEnd()
+    On Error GoTo Fail
+    Dim hVBE As LongPtr
+    hVBE = Application.VBE.MainWindow.hWnd
+
+    Dim host As uia_e
+    Set host = getHandle(hVBE)
+
+    Dim c1 As New uia_c
+    Dim imm As uia_e
+    Set imm = host.ffChildren(c1.Type_(Window_).Name4_Full("イミディエイト"))
+    Set imm = imm.twLastChild
+
+    Dim rng As uia_t
+    Set rng = imm.ptGetTextRange
+    rng.Move AsSelfInstance, g_Document, 1
+Fail:
+End Sub

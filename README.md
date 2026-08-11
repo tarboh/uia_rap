@@ -165,8 +165,12 @@ Debug.Print doc.title
 doc.getElementById("foo").Click
 ```
 
-- **未移植**: `GetInfo` / `test`（要素情報ダンプの開発用ツール。`PollForPotentialSupportedProperties`
-  の SAFEARRAY 受け渡しが必要なため後回し）。通常の自動操作には影響しません。
+- **開発補助**: `GetInfo`（要素がサポートするプロパティ/パターンをイミディエイトに一覧表示）、
+  `test`（カーソル直下の要素を CTRL で拾って情報表示し続ける。ALT で終了）も移植済み。
+
+`ref/` 版の機能はすべて `noref/` に移植済みです（`test` の VBE キャレット移動のみ
+「VBA プロジェクト オブジェクト モデルへのアクセスを信頼する」設定が要り、無効時は
+その部分だけスキップします）。
 
 同じ姉妹プロジェクトとして、UI Automation を参照設定なしでフルに叩くライブラリもあります → **[VBA_UIAutomation_NoRef](https://github.com/tarboh/VBA_UIAutomation_NoRef)**
 

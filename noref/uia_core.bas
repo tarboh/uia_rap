@@ -242,6 +242,7 @@ Private Declare PtrSafe Sub Sleep_API Lib "kernel32" Alias "Sleep" (ByVal dwMill
 Public Declare PtrSafe Function URLDownloadToFile Lib "urlmon" Alias "URLDownloadToFileA" ( _
     ByVal pCaller As LongPtr, ByVal szURL As String, ByVal szFileName As String, _
     ByVal dwReserved As Long, ByVal lpfnCB As LongPtr) As Long
+Public Declare PtrSafe Function GetAsyncKeyState Lib "user32" (ByVal vKey As Long) As Integer
 Private Declare PtrSafe Function GetCursorPos Lib "user32" ( _
     ByRef lpPoint As tagPOINT) As Long
 Private Declare PtrSafe Function FormatMessageW Lib "kernel32" ( _
@@ -521,6 +522,59 @@ Public Function SafeArrayToLongs(ByVal psa As LongPtr, _
     End If
     If destroyIt Then SafeArrayDestroy psa
     SafeArrayToLongs = out
+End Function
+
+' [out] SAFEARRAY*(VT_BSTR) を String 配列にする。
+' SafeArrayGetElement は VT_BSTR 要素をコピーして String のスロットへ書くので
+' CopyMemory は不要 (VBA が所有・解放する)。
+Public Function SafeArrayToStrings(ByVal psa As LongPtr, _
+                                   Optional ByVal destroyIt As Boolean = True) As String()
+    Dim lb As Long, ub As Long, i As Long, out() As String, s As String
+    If psa = 0 Then SafeArrayToStrings = out: Exit Function
+    SafeArrayGetLBound psa, 1, lb
+    SafeArrayGetUBound psa, 1, ub
+    If ub >= lb Then
+        ReDim out(0 To ub - lb)
+        For i = lb To ub
+            s = vbNullString                    ' 空にしておく (上書きで旧BSTRを漏らさない)
+            SafeArrayGetElement psa, i, s       ' VT_BSTR 要素を s にコピー
+            out(i - lb) = s
+        Next
+    End If
+    If destroyIt Then SafeArrayDestroy psa
+    SafeArrayToStrings = out
+End Function
+
+' 要素がサポートしうるプロパティ ID と名前を取得する (vtable[52])。
+Public Sub PollSupportedProperties(ByVal pElem As LongPtr, _
+                                   ByRef ids() As Long, ByRef names() As String)
+    Dim saIds As LongPtr, saNames As LongPtr
+    UiaCheck UiaInvoke(UIA(), 52, "PPP", pElem, VarPtr(saIds), VarPtr(saNames)), _
+             "PollForPotentialSupportedProperties"
+    ids = SafeArrayToLongs(saIds)
+    names = SafeArrayToStrings(saNames)
+End Sub
+
+' 要素がサポートしうるパターン ID と名前を取得する (vtable[51])。
+Public Sub PollSupportedPatterns(ByVal pElem As LongPtr, _
+                                 ByRef ids() As Long, ByRef names() As String)
+    Dim saIds As LongPtr, saNames As LongPtr
+    UiaCheck UiaInvoke(UIA(), 51, "PPP", pElem, VarPtr(saIds), VarPtr(saNames)), _
+             "PollForPotentialSupportedPatterns"
+    ids = SafeArrayToLongs(saIds)
+    names = SafeArrayToStrings(saNames)
+End Sub
+
+' パターン ID の内部名 (vtable[50])。
+Public Function GetPatternProgrammaticName(ByVal patternId As Long) As String
+    UiaCheck UiaInvoke(UIA(), 50, "LP", patternId, VarPtr(GetPatternProgrammaticName)), _
+             "GetPatternProgrammaticName"
+End Function
+
+' プロパティ ID の内部名 (vtable[49])。
+Public Function GetPropertyProgrammaticName(ByVal propertyId As Long) As String
+    UiaCheck UiaInvoke(UIA(), 49, "LP", propertyId, VarPtr(GetPropertyProgrammaticName)), _
+             "GetPropertyProgrammaticName"
 End Function
 
 '==============================================================================
