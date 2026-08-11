@@ -240,7 +240,7 @@ Public Declare PtrSafe Function SafeArrayGetLBound Lib "oleaut32" ( _
 Public Declare PtrSafe Function SafeArrayGetUBound Lib "oleaut32" ( _
     ByVal psa As LongPtr, ByVal nDim As Long, ByRef plUbound As Long) As Long
 Public Declare PtrSafe Function SafeArrayGetElement Lib "oleaut32" ( _
-    ByVal psa As LongPtr, ByRef rgIndices As Long, ByRef pv As Any) As Long
+    ByVal psa As LongPtr, ByRef rgIndices As Long, ByVal pv As LongPtr) As Long
 Public Declare PtrSafe Function SafeArrayDestroy Lib "oleaut32" (ByVal psa As LongPtr) As Long
 Private Declare PtrSafe Sub Sleep_API Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
 Public Declare PtrSafe Function URLDownloadToFile Lib "urlmon" Alias "URLDownloadToFileA" ( _
@@ -538,7 +538,7 @@ Public Function SafeArrayToLongs(ByVal psa As LongPtr, _
     If ub >= lb Then
         ReDim out(0 To ub - lb)
         For i = lb To ub
-            SafeArrayGetElement psa, i, v
+            SafeArrayGetElement psa, i, VarPtr(v)
             out(i - lb) = v
         Next i
     End If
@@ -559,7 +559,7 @@ Public Function SafeArrayToStrings(ByVal psa As LongPtr, _
         ReDim out(0 To ub - lb)
         For i = lb To ub
             s = vbNullString                    ' 空にしておく (上書きで旧BSTRを漏らさない)
-            SafeArrayGetElement psa, i, s       ' VT_BSTR 要素を s にコピー
+            SafeArrayGetElement psa, i, VarPtr(s) ' VT_BSTR 要素を s にコピー
             out(i - lb) = s
         Next
     End If
