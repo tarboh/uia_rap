@@ -9,6 +9,8 @@ UI Automation を使って **Edge などのアプリを VBA から自動操作�
 - `uia_t` … テキスト範囲（TextRange）。検索・移動・選択
 - `uia_Factory` … `e()` / `c()` / `t()` で各インスタンスを生成する入口
 
+**全メソッドの一覧は [docs/MANUAL.md](docs/MANUAL.md) を参照してください。**
+
 ```vb
 Sub Example()
     Dim el As uia_e
