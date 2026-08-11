@@ -156,6 +156,19 @@ Public Const TreeTraversalOptions_Default As Long = 0
 Public Const TreeTraversalOptions_PostOrder As Long = 1
 Public Const TreeTraversalOptions_LastToFirstOrder As Long = 2
 
+' --- TextUnit ---
+Public Const TextUnit_Character As Long = 0
+Public Const TextUnit_Format As Long = 1
+Public Const TextUnit_Word As Long = 2
+Public Const TextUnit_Line As Long = 3
+Public Const TextUnit_Paragraph As Long = 4
+Public Const TextUnit_Page As Long = 5
+Public Const TextUnit_Document As Long = 6
+
+' --- TextPatternRangeEndpoint ---
+Public Const TextPatternRangeEndpoint_Start As Long = 0
+Public Const TextPatternRangeEndpoint_End As Long = 1
+
 '==============================================================================
 ' API êÈåæ
 '==============================================================================
