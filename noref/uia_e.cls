@@ -18,7 +18,8 @@ Attribute VB_Exposed = True
 '
 ' この段階 (第1弾) で移植済み:
 '   取得 / プロパティ / 検索(ff*/fa*) / TreeWalker / 基本パターン / 配列 / 座標
-' 未移植 (第2弾予定): Edge*, IES_*(MSHTML), ptValue_DLFile, GetInfo/test 系
+' 第2弾で移植済み: Edge*, IES_*(IEモード), ptValue_DLFile, GetTopWindow
+' 未移植: GetInfo/test 系 (開発用ダンプ。PollForPotentialSupportedProperties が要る)
 '==============================================================================
 Option Explicit
 
@@ -786,3 +787,193 @@ Public Property Get prShortCtrlTypeName() As String
     s = Replace$(s, "ControlTypeId", "")
     prShortCtrlTypeName = s
 End Property
+
+'==============================================================================
+' Edge 操作 (UIA のみ。IE モードの HTML は IES_* を使う)
+'==============================================================================
+
+' 現在の elem が Edge のトップウィンドウか
+Private Function EdgeIsEdgeWindow() As Boolean
+    If prClsName = "Chrome_WidgetWin_1" Then
+        If prName Like "*Edge" Then
+            EdgeIsEdgeWindow = True
+        Else
+            Debug.Print "Edge ウィンドウではありません"
+        End If
+    Else
+        Debug.Print "Edge ウィンドウではありません"
+    End If
+End Function
+
+Public Function EdgeGetTopWindow(Optional AdditionalCondition As Variant) As uia_e
+    Dim cc As New uia_c
+    Set cc = cc.ClsName("Chrome_WidgetWin_1").Name1_Sub("edge")
+    Set cc = CreateAdditionalCondition(cc, AdditionalCondition)
+    Set EdgeGetTopWindow = getRoot().ffChildren(cc)
+End Function
+
+Public Function EdgeGetTopWindows(Optional AdditionalCondition As Variant) As uia_e
+    Dim cc As New uia_c
+    Set cc = cc.ClsName("Chrome_WidgetWin_1").Name1_Sub("edge")
+    Set cc = CreateAdditionalCondition(cc, AdditionalCondition)
+    Set EdgeGetTopWindows = getRoot().faChildren(cc)
+End Function
+
+' Edge トップウィンドウが選択されている前提。タブアイテム群を取得。
+Public Function EdgeGetTabItems(Optional AdditionalCondition As Variant) As uia_e
+    If EdgeIsEdgeWindow = False Then Exit Function
+    If Alert_Nothing(m_elem, "EdgeGetTabItems") Then Exit Function
+
+    Dim c_container As New uia_c
+    Dim e_container As uia_e
+    Set e_container = Me.ffDescendants(c_container.ClsName("EdgeTabContainerImpl"))
+
+    Dim c_items As New uia_c
+    Set c_items = CreateAdditionalCondition(c_items.ClsName("EdgeTab"), AdditionalCondition)
+    Set EdgeGetTabItems = e_container.faChildren(c_items)
+End Function
+
+Public Function EdgeChangeTab(AdditionalCondition As Variant) As uia_e
+    If EdgeIsEdgeWindow = False Then Exit Function
+    EdgeGetTabItems(AdditionalCondition).ptSelectionItem_Select
+    Set EdgeChangeTab = Me
+End Function
+
+Public Function EdgeCreateNewTab() As uia_e
+    If EdgeIsEdgeWindow = False Then Exit Function
+    Dim c1 As New uia_c, c2 As New uia_c
+    ffDescendants(c1.ClsName("EdgeTabStripRegionView")).ffChildren(c2.Type_(Button).Name4_Full("新しいタブ")).ptInvoke
+    Set EdgeCreateNewTab = Me
+End Function
+
+Public Function EdgeGetAddresBar() As uia_e
+    If EdgeIsEdgeWindow = False Then Exit Function
+    Dim c1 As New uia_c
+    Set EdgeGetAddresBar = ffDescendants(c1.ClsName("OmniboxViewViews").Name4_Full("アドレスと検索バー"))
+End Function
+
+Public Function EdgeSetAddress(value As String, Optional PushEnterKey As Boolean) As uia_e
+    EdgeGetAddresBar.ptSetValue value
+    If PushEnterKey Then SendKeys "~"
+    Set EdgeSetAddress = Me
+End Function
+
+' 追加条件を合成する。AdditionalCondition は String / uia_c / 省略。
+Private Function CreateAdditionalCondition(c As uia_c, AdditionalCondition As Variant) As uia_c
+    Dim cc As New uia_c
+    Select Case TypeName(AdditionalCondition)
+        Case "String"
+            Set cc = c.Name1_Sub(CStr(AdditionalCondition))
+        Case "uia_c"
+            cc.cnd = uia_core.CreateAndCondition(c.cnd, AdditionalCondition.cnd)
+        Case Else       ' 省略 (Error) など: そのまま
+            Set cc = c
+    End Select
+    Set CreateAdditionalCondition = cc
+End Function
+
+'==============================================================================
+' IE モードの HTML DOM (IHTMLDocument2 を Object 遅延バインドで取得)
+'==============================================================================
+
+' 配下の "Internet Explorer_Server" から IHTMLDocument を得る。
+Public Function IES_GetIHTMLDocument_FromTopWindow() As Object
+    Set IES_GetIHTMLDocument_FromTopWindow = M_LIB_IES.GetIES_From_NomalElement(m_elem)
+End Function
+
+' 現在の elem が IES 要素そのものである前提で IHTMLDocument を得る。
+Public Function IES_GetIHTMLDocument_FromIESElement() As Object
+    Set IES_GetIHTMLDocument_FromIESElement = M_LIB_IES.GetIES_From_ieElement(m_elem)
+End Function
+
+'==============================================================================
+' 応用
+'==============================================================================
+
+' ValuePattern の値 (URL) を URLDownloadToFile で保存する。
+Public Function ptValue_DLFile(Optional DownLoadFolderPath As String, Optional SavedFileFullPath As String, Optional Overwrite As Boolean) As Boolean
+    If DownLoadFolderPath = "" Then
+        DownLoadFolderPath = Environ$("USERPROFILE") & "\Downloads"
+    End If
+
+    If CBool(uia_core.GetPropertyValue(m_elem, UIA_IsValuePatternAvailablePropertyId)) = False Then
+        #If DebugMode = 1 Then
+            Debug.Print "No ValuePattern Available!(ptValue_DLFile)"
+        #End If
+        Exit Function
+    End If
+
+    Dim fileUrl As String
+    fileUrl = uia_core.GetPropertyValue(m_elem, UIA_ValueValuePropertyId)
+    If fileUrl = "" Then
+        #If DebugMode = 1 Then
+            Debug.Print "ValuePattern.Value Is NullString!(ptValue_DLFile)"
+        #End If
+        Exit Function
+    End If
+
+    Dim posName As Long
+    posName = InStrRev(fileUrl, "/")
+    If posName = 0 Then
+        #If DebugMode = 1 Then
+            Debug.Print """" & fileUrl & """ Is Invalid Url!"
+        #End If
+        Exit Function
+    End If
+
+    Dim fileName As String
+    fileName = Mid$(fileUrl, posName + 1)
+
+    Dim BaseName As String, extension As String
+    If InStrRev(fileName, ".") > 0 Then
+        BaseName = Left$(fileName, InStrRev(fileName, ".") - 1)
+        extension = Mid$(fileName, InStrRev(fileName, "."))
+    Else
+        BaseName = fileName
+        extension = ""
+    End If
+
+    Dim newName As String, i As Long
+    newName = fileName
+    i = 1
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    If Overwrite = False Then
+        Do While fso.FileExists(fso.BuildPath(DownLoadFolderPath, newName))
+            newName = BaseName & " (" & i & ")" & extension
+            i = i + 1
+        Loop
+    End If
+
+    Dim DownloadFullPath As String
+    DownloadFullPath = fso.BuildPath(DownLoadFolderPath, newName)
+
+    ptValue_DLFile = (uia_core.URLDownloadToFile(0, fileUrl, DownloadFullPath, 0, 0) = 0)
+
+    If ptValue_DLFile = False Then
+        #If DebugMode = 1 Then
+            Debug.Print "File DownLoad Failed!(ptValue_DLFile)"
+        #End If
+    Else
+        SavedFileFullPath = DownloadFullPath
+    End If
+End Function
+
+' 祖先をたどってトップウィンドウ (デスクトップの1つ下) を得る。
+Public Function GetTopWindow() As uia_e
+    If Alert_Nothing(m_elem, "GetTopWindow") Then Exit Function
+
+    Dim e_ As New uia_e
+    uia_core.ComAddRef m_elem        ' 共有するので AddRef
+    e_.elem = m_elem
+    CopyMember e_
+
+    Do
+        If e_.twParent.prName = "デスクトップ 1" Then Exit Do
+        Set e_ = e_.twParent
+        If Alert_Nothing(e_.elem, "GetTopWindow") Then Exit Do
+        DoEvents
+    Loop
+    Set GetTopWindow = e_
+End Function

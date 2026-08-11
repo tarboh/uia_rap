@@ -223,6 +223,9 @@ Public Declare PtrSafe Function SafeArrayGetElement Lib "oleaut32" ( _
     ByVal psa As LongPtr, ByRef rgIndices As Long, ByRef pv As Any) As Long
 Public Declare PtrSafe Function SafeArrayDestroy Lib "oleaut32" (ByVal psa As LongPtr) As Long
 Private Declare PtrSafe Sub Sleep_API Lib "kernel32" Alias "Sleep" (ByVal dwMilliseconds As Long)
+Public Declare PtrSafe Function URLDownloadToFile Lib "urlmon" Alias "URLDownloadToFileA" ( _
+    ByVal pCaller As LongPtr, ByVal szURL As String, ByVal szFileName As String, _
+    ByVal dwReserved As Long, ByVal lpfnCB As LongPtr) As Long
 Private Declare PtrSafe Function GetCursorPos Lib "user32" ( _
     ByRef lpPoint As tagPOINT) As Long
 Private Declare PtrSafe Function FormatMessageW Lib "kernel32" ( _

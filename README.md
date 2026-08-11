@@ -40,7 +40,7 @@ End Sub
 | `UIA_ElementFromPoint.bas` | 座標から要素を取る補助（`DispCallFunc` 版） |
 | `M_LIB_IES.bas` | IE/旧 Edge の HTML DOM 抽出 |
 
-> **参照設定不要版を作成中です。** 詳細は下の «参照設定不要版» を参照。
+> **参照設定不要版が `noref/` にあります。** 下の «参照設定不要版» を参照。
 
 ---
 
@@ -141,14 +141,32 @@ el.SetFocus                        ' フォーカスを当てる
 
 ---
 
-## 参照設定不要版（作成中）
+## 参照設定不要版（`noref/`）
 
-`ref/` は参照設定が前提ですが、**参照設定なし版**（`noref/`）を作成中です。設計方針は次のとおり。
+`ref/` は参照設定が前提ですが、**参照設定を一切張らずに動く版**が `noref/` にあります。
+`CoCreateInstance` + `DispCallFunc` で UI Automation を叩くので、インポートするだけで動きます。
 
-- `CoCreateInstance` + `DispCallFunc` で UI Automation を叩き、**参照設定を不要**にする。
-- インスタンス生成機構（`New CUIAutomation` 相当）は `uia_e` などのクラス内に隠蔽する。
-- 「インポートするモジュールが少ない」利点を保つため、必要な呼び出しだけをクラスに内蔵し、**モジュール数を増やさない**。
-- MSHTML（`IHTMLDocument2`）部分は遅延バインドで残す。
+| ファイル | 役割 |
+|---|---|
+| `uia_core.bas` | 下回り。共有 IUIAutomation の生成 (`New CUIAutomation` 相当を隠蔽)、DispCallFunc、定数 |
+| `uia_e.cls` / `uia_c.cls` / `uia_t.cls` | 要素・条件・テキスト範囲 (API は `ref/` と同じ) |
+| `M_LIB_IES.bas` | IE モードの HTML DOM 取得 |
+| `uia_Factory.bas` | `e()` / `c()` / `t()` |
+
+- API は `ref/` 版と同一。`e.getRoot.ffDescendants(c.Type_(Button).Name4_Full("保存")).ptInvoke` のように書けます。
+- `elem` / `cnd` / `tRng` は COM オブジェクトではなく生ポインタ (`LongPtr`) で、参照カウントは各クラスが管理します。
+- **IE モードの HTML** は `IES_GetIHTMLDocument_FromTopWindow()` で `IHTMLDocument2` を
+  `Object` (遅延バインド) として取得できます。Microsoft HTML Object Library の参照も不要です。
+
+```vb
+Dim doc As Object
+Set doc = edgeTab.IES_GetIHTMLDocument_FromTopWindow()
+Debug.Print doc.title
+doc.getElementById("foo").Click
+```
+
+- **未移植**: `GetInfo` / `test`（要素情報ダンプの開発用ツール。`PollForPotentialSupportedProperties`
+  の SAFEARRAY 受け渡しが必要なため後回し）。通常の自動操作には影響しません。
 
 同じ姉妹プロジェクトとして、UI Automation を参照設定なしでフルに叩くライブラリもあります → **[VBA_UIAutomation_NoRef](https://github.com/tarboh/VBA_UIAutomation_NoRef)**
 
