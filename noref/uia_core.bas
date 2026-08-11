@@ -69,136 +69,152 @@ End Type
 '==============================================================================
 
 ' --- Property Id ---
-Public Const UIA_BoundingRectanglePropertyId As Long = 30001
-Public Const UIA_ControlTypePropertyId As Long = 30003
-Public Const UIA_LocalizedControlTypePropertyId As Long = 30004
-Public Const UIA_NamePropertyId As Long = 30005
-Public Const UIA_AutomationIdPropertyId As Long = 30011
-Public Const UIA_ClassNamePropertyId As Long = 30012
-Public Const UIA_NativeWindowHandlePropertyId As Long = 30020
-Public Const UIA_ValueValuePropertyId As Long = 30045
-Public Const UIA_ToggleToggleStatePropertyId As Long = 30086
-Public Const UIA_ExpandCollapseExpandCollapseStatePropertyId As Long = 30070
-Public Const UIA_ScrollHorizontalScrollPercentPropertyId As Long = 30053
-Public Const UIA_ScrollVerticalScrollPercentPropertyId As Long = 30055
-Public Const UIA_IsInvokePatternAvailablePropertyId As Long = 30031
-Public Const UIA_IsValuePatternAvailablePropertyId As Long = 30043
-Public Const UIA_IsTextPatternAvailablePropertyId As Long = 30040
-Public Const UIA_IsTextPattern2AvailablePropertyId As Long = 30119
-Public Const UIA_IsTextChildPatternAvailablePropertyId As Long = 30136
-Public Const UIA_IsTextEditPatternAvailablePropertyId As Long = 30149
+Public Enum UIA_PropertyIDs
+    UIA_BoundingRectanglePropertyId = 30001
+    UIA_ControlTypePropertyId = 30003
+    UIA_LocalizedControlTypePropertyId = 30004
+    UIA_NamePropertyId = 30005
+    UIA_AutomationIdPropertyId = 30011
+    UIA_ClassNamePropertyId = 30012
+    UIA_NativeWindowHandlePropertyId = 30020
+    UIA_ValueValuePropertyId = 30045
+    UIA_ToggleToggleStatePropertyId = 30086
+    UIA_ExpandCollapseExpandCollapseStatePropertyId = 30070
+    UIA_ScrollHorizontalScrollPercentPropertyId = 30053
+    UIA_ScrollVerticalScrollPercentPropertyId = 30055
+    UIA_IsInvokePatternAvailablePropertyId = 30031
+    UIA_IsValuePatternAvailablePropertyId = 30043
+    UIA_IsTextPatternAvailablePropertyId = 30040
+    UIA_IsTextPattern2AvailablePropertyId = 30119
+    UIA_IsTextChildPatternAvailablePropertyId = 30136
+    UIA_IsTextEditPatternAvailablePropertyId = 30149
+End Enum
 
 ' --- ControlType Id ---
-Public Const UIA_ButtonControlTypeId As Long = 50000
-Public Const UIA_CalendarControlTypeId As Long = 50001
-Public Const UIA_CheckBoxControlTypeId As Long = 50002
-Public Const UIA_ComboBoxControlTypeId As Long = 50003
-Public Const UIA_EditControlTypeId As Long = 50004
-Public Const UIA_HyperlinkControlTypeId As Long = 50005
-Public Const UIA_ImageControlTypeId As Long = 50006
-Public Const UIA_ListItemControlTypeId As Long = 50007
-Public Const UIA_ListControlTypeId As Long = 50008
-Public Const UIA_MenuControlTypeId As Long = 50009
-Public Const UIA_MenuBarControlTypeId As Long = 50010
-Public Const UIA_MenuItemControlTypeId As Long = 50011
-Public Const UIA_ProgressBarControlTypeId As Long = 50012
-Public Const UIA_RadioButtonControlTypeId As Long = 50013
-Public Const UIA_ScrollBarControlTypeId As Long = 50014
-Public Const UIA_SliderControlTypeId As Long = 50015
-Public Const UIA_SpinnerControlTypeId As Long = 50016
-Public Const UIA_StatusBarControlTypeId As Long = 50017
-Public Const UIA_TabControlTypeId As Long = 50018
-Public Const UIA_TabItemControlTypeId As Long = 50019
-Public Const UIA_TextControlTypeId As Long = 50020
-Public Const UIA_ToolBarControlTypeId As Long = 50021
-Public Const UIA_ToolTipControlTypeId As Long = 50022
-Public Const UIA_TreeControlTypeId As Long = 50023
-Public Const UIA_TreeItemControlTypeId As Long = 50024
-Public Const UIA_CustomControlTypeId As Long = 50025
-Public Const UIA_GroupControlTypeId As Long = 50026
-Public Const UIA_ThumbControlTypeId As Long = 50027
-Public Const UIA_DataGridControlTypeId As Long = 50028
-Public Const UIA_DataItemControlTypeId As Long = 50029
-Public Const UIA_DocumentControlTypeId As Long = 50030
-Public Const UIA_SplitButtonControlTypeId As Long = 50031
-Public Const UIA_WindowControlTypeId As Long = 50032
-Public Const UIA_PaneControlTypeId As Long = 50033
-Public Const UIA_HeaderControlTypeId As Long = 50034
-Public Const UIA_HeaderItemControlTypeId As Long = 50035
-Public Const UIA_TableControlTypeId As Long = 50036
-Public Const UIA_TitleBarControlTypeId As Long = 50037
-Public Const UIA_SeparatorControlTypeId As Long = 50038
-Public Const UIA_SemanticZoomControlTypeId As Long = 50039
-Public Const UIA_AppBarControlTypeId As Long = 50040
+Public Enum UIA_ControlTypeIDs
+    UIA_ButtonControlTypeId = 50000
+    UIA_CalendarControlTypeId = 50001
+    UIA_CheckBoxControlTypeId = 50002
+    UIA_ComboBoxControlTypeId = 50003
+    UIA_EditControlTypeId = 50004
+    UIA_HyperlinkControlTypeId = 50005
+    UIA_ImageControlTypeId = 50006
+    UIA_ListItemControlTypeId = 50007
+    UIA_ListControlTypeId = 50008
+    UIA_MenuControlTypeId = 50009
+    UIA_MenuBarControlTypeId = 50010
+    UIA_MenuItemControlTypeId = 50011
+    UIA_ProgressBarControlTypeId = 50012
+    UIA_RadioButtonControlTypeId = 50013
+    UIA_ScrollBarControlTypeId = 50014
+    UIA_SliderControlTypeId = 50015
+    UIA_SpinnerControlTypeId = 50016
+    UIA_StatusBarControlTypeId = 50017
+    UIA_TabControlTypeId = 50018
+    UIA_TabItemControlTypeId = 50019
+    UIA_TextControlTypeId = 50020
+    UIA_ToolBarControlTypeId = 50021
+    UIA_ToolTipControlTypeId = 50022
+    UIA_TreeControlTypeId = 50023
+    UIA_TreeItemControlTypeId = 50024
+    UIA_CustomControlTypeId = 50025
+    UIA_GroupControlTypeId = 50026
+    UIA_ThumbControlTypeId = 50027
+    UIA_DataGridControlTypeId = 50028
+    UIA_DataItemControlTypeId = 50029
+    UIA_DocumentControlTypeId = 50030
+    UIA_SplitButtonControlTypeId = 50031
+    UIA_WindowControlTypeId = 50032
+    UIA_PaneControlTypeId = 50033
+    UIA_HeaderControlTypeId = 50034
+    UIA_HeaderItemControlTypeId = 50035
+    UIA_TableControlTypeId = 50036
+    UIA_TitleBarControlTypeId = 50037
+    UIA_SeparatorControlTypeId = 50038
+    UIA_SemanticZoomControlTypeId = 50039
+    UIA_AppBarControlTypeId = 50040
+End Enum
 
 ' --- Pattern Id ---
-Public Const UIA_InvokePatternId As Long = 10000
-Public Const UIA_SelectionPatternId As Long = 10001
-Public Const UIA_ValuePatternId As Long = 10002
-Public Const UIA_RangeValuePatternId As Long = 10003
-Public Const UIA_ScrollPatternId As Long = 10004
-Public Const UIA_ExpandCollapsePatternId As Long = 10005
-Public Const UIA_GridPatternId As Long = 10006
-Public Const UIA_GridItemPatternId As Long = 10007
-Public Const UIA_MultipleViewPatternId As Long = 10008
-Public Const UIA_WindowPatternId As Long = 10009
-Public Const UIA_SelectionItemPatternId As Long = 10010
-Public Const UIA_DockPatternId As Long = 10011
-Public Const UIA_TablePatternId As Long = 10012
-Public Const UIA_TableItemPatternId As Long = 10013
-Public Const UIA_TextPatternId As Long = 10014
-Public Const UIA_TogglePatternId As Long = 10015
-Public Const UIA_TransformPatternId As Long = 10016
-Public Const UIA_ScrollItemPatternId As Long = 10017
-Public Const UIA_LegacyIAccessiblePatternId As Long = 10018
-Public Const UIA_ItemContainerPatternId As Long = 10019
-Public Const UIA_VirtualizedItemPatternId As Long = 10020
-Public Const UIA_SynchronizedInputPatternId As Long = 10021
-Public Const UIA_ObjectModelPatternId As Long = 10022
-Public Const UIA_AnnotationPatternId As Long = 10023
-Public Const UIA_TextPattern2Id As Long = 10024
-Public Const UIA_StylesPatternId As Long = 10025
-Public Const UIA_SpreadsheetPatternId As Long = 10026
-Public Const UIA_SpreadsheetItemPatternId As Long = 10027
-Public Const UIA_TransformPattern2Id As Long = 10028
-Public Const UIA_TextChildPatternId As Long = 10029
-Public Const UIA_DragPatternId As Long = 10030
-Public Const UIA_DropTargetPatternId As Long = 10031
-Public Const UIA_TextEditPatternId As Long = 10032
-Public Const UIA_CustomNavigationPatternId As Long = 10033
-Public Const UIA_SelectionPattern2Id As Long = 10034
+Public Enum UIA_PatternIDs
+    UIA_InvokePatternId = 10000
+    UIA_SelectionPatternId = 10001
+    UIA_ValuePatternId = 10002
+    UIA_RangeValuePatternId = 10003
+    UIA_ScrollPatternId = 10004
+    UIA_ExpandCollapsePatternId = 10005
+    UIA_GridPatternId = 10006
+    UIA_GridItemPatternId = 10007
+    UIA_MultipleViewPatternId = 10008
+    UIA_WindowPatternId = 10009
+    UIA_SelectionItemPatternId = 10010
+    UIA_DockPatternId = 10011
+    UIA_TablePatternId = 10012
+    UIA_TableItemPatternId = 10013
+    UIA_TextPatternId = 10014
+    UIA_TogglePatternId = 10015
+    UIA_TransformPatternId = 10016
+    UIA_ScrollItemPatternId = 10017
+    UIA_LegacyIAccessiblePatternId = 10018
+    UIA_ItemContainerPatternId = 10019
+    UIA_VirtualizedItemPatternId = 10020
+    UIA_SynchronizedInputPatternId = 10021
+    UIA_ObjectModelPatternId = 10022
+    UIA_AnnotationPatternId = 10023
+    UIA_TextPattern2Id = 10024
+    UIA_StylesPatternId = 10025
+    UIA_SpreadsheetPatternId = 10026
+    UIA_SpreadsheetItemPatternId = 10027
+    UIA_TransformPattern2Id = 10028
+    UIA_TextChildPatternId = 10029
+    UIA_DragPatternId = 10030
+    UIA_DropTargetPatternId = 10031
+    UIA_TextEditPatternId = 10032
+    UIA_CustomNavigationPatternId = 10033
+    UIA_SelectionPattern2Id = 10034
+End Enum
 
 ' --- PropertyConditionFlags ---
-Public Const PropertyConditionFlags_None As Long = 0
-Public Const PropertyConditionFlags_IgnoreCase As Long = 1
-Public Const PropertyConditionFlags_MatchSubstring As Long = 2
+Public Enum PropertyConditionFlags
+    PropertyConditionFlags_None = 0
+    PropertyConditionFlags_IgnoreCase = 1
+    PropertyConditionFlags_MatchSubstring = 2
+End Enum
 
 ' --- TreeScope ---
-Public Const TreeScope_None As Long = 0
-Public Const TreeScope_Element As Long = 1
-Public Const TreeScope_Children As Long = 2
-Public Const TreeScope_Descendants As Long = 4
-Public Const TreeScope_Parent As Long = 8
-Public Const TreeScope_Ancestors As Long = 16
-Public Const TreeScope_Subtree As Long = 7
+Public Enum TreeScope
+    TreeScope_None = 0
+    TreeScope_Element = 1
+    TreeScope_Children = 2
+    TreeScope_Descendants = 4
+    TreeScope_Parent = 8
+    TreeScope_Ancestors = 16
+    TreeScope_Subtree = 7
+End Enum
 
 ' --- TreeTraversalOptions ---
-Public Const TreeTraversalOptions_Default As Long = 0
-Public Const TreeTraversalOptions_PostOrder As Long = 1
-Public Const TreeTraversalOptions_LastToFirstOrder As Long = 2
+Public Enum TreeTraversalOptions
+    TreeTraversalOptions_Default = 0
+    TreeTraversalOptions_PostOrder = 1
+    TreeTraversalOptions_LastToFirstOrder = 2
+End Enum
 
 ' --- TextUnit ---
-Public Const TextUnit_Character As Long = 0
-Public Const TextUnit_Format As Long = 1
-Public Const TextUnit_Word As Long = 2
-Public Const TextUnit_Line As Long = 3
-Public Const TextUnit_Paragraph As Long = 4
-Public Const TextUnit_Page As Long = 5
-Public Const TextUnit_Document As Long = 6
+Public Enum TextUnit
+    TextUnit_Character = 0
+    TextUnit_Format = 1
+    TextUnit_Word = 2
+    TextUnit_Line = 3
+    TextUnit_Paragraph = 4
+    TextUnit_Page = 5
+    TextUnit_Document = 6
+End Enum
 
 ' --- TextPatternRangeEndpoint ---
-Public Const TextPatternRangeEndpoint_Start As Long = 0
-Public Const TextPatternRangeEndpoint_End As Long = 1
+Public Enum TextPatternRangeEndpoint
+    TextPatternRangeEndpoint_Start = 0
+    TextPatternRangeEndpoint_End = 1
+End Enum
 
 '==============================================================================
 ' API êÈåæ
