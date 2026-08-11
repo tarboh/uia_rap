@@ -231,6 +231,10 @@ Private Declare PtrSafe Function DispCallFunc Lib "oleaut32" ( _
     ByRef prgvt As Integer, ByRef prgpvarg As LongPtr, ByRef pvargResult As Variant) As Long
 Public Declare PtrSafe Function SysStringLen Lib "oleaut32" (ByVal bstr As LongPtr) As Long
 Public Declare PtrSafe Sub SysFreeString Lib "oleaut32" (ByVal bstr As LongPtr)
+Private Declare PtrSafe Function VariantCopy Lib "oleaut32" ( _
+    ByRef pvargDest As Variant, ByVal pvargSrc As LongPtr) As Long
+Private Declare PtrSafe Function VariantClear Lib "oleaut32" ( _
+    ByVal pvarg As LongPtr) As Long
 Public Declare PtrSafe Function SafeArrayGetLBound Lib "oleaut32" ( _
     ByVal psa As LongPtr, ByVal nDim As Long, ByRef plLbound As Long) As Long
 Public Declare PtrSafe Function SafeArrayGetUBound Lib "oleaut32" ( _
@@ -427,21 +431,28 @@ End Function
 
 ' 要素のプロパティ値 (VARIANT) を取得する。GetCurrentPropertyValue = vtable[10]。
 Public Function GetPropertyValue(ByVal pElem As LongPtr, ByVal propId As Long) As Variant
-    Dim v As Variant
-    uia_core.UiaCheck UiaInvoke(pElem, 10, "LP", propId, VarPtr(v)), _
+    ' VARIANT を Variant 変数ではなくバイトバッファで受け取る (x64 で 24 バイト)。
+    ' VBA にオブジェクトとして解釈させる前に vt を生バイトから読むため。
+    Dim buf(0 To 23) As Byte
+    uia_core.UiaCheck UiaInvoke(pElem, 10, "LP", propId, VarPtr(buf(0))), _
                       "IUIAutomationElement.GetCurrentPropertyValue"
-    ' 一部のプロパティ (LabeledBy / ControllerFor 等) は要素参照 (VT_UNKNOWN) を返す。
-    ' 参照設定が無いと型情報が無く、VBA が扱えない Variant になって代入時に
-    ' 「型が一致しません」になる。IsObject では捕まらないケースがあるため、
-    ' 代入自体をエラートラップして確実に弾き、そういう値は Empty で返す。
-    ' (ローカル v はスコープ終了時に VBA が解放するので参照リークもしない)
-    On Error Resume Next
-    GetPropertyValue = v
-    If Err.Number <> 0 Then
-        Err.Clear
+
+    Dim baseVt As Long
+    baseVt = (CLng(buf(0)) + CLng(buf(1)) * 256) And &HFFF&   ' 下位が型、VT_ARRAY 等の上位は除く
+
+    ' LabeledBy 等は要素参照 (VT_UNKNOWN=13) を返す。VT_DISPATCH=9 も含め、
+    ' オブジェクト型は VBA が扱えない (IsObject でも捕まらない/戻すと型不一致) ので
+    ' 値として返さず、VARIANT を解放して Empty を返す。
+    If baseVt = 9 Or baseVt = 13 Then           ' VT_DISPATCH / VT_UNKNOWN
+        VariantClear VarPtr(buf(0))
         GetPropertyValue = Empty
+    Else
+        ' スカラー / 配列 / BSTR は VariantCopy で正しく複製してから返す。
+        Dim result As Variant
+        VariantCopy result, VarPtr(buf(0))
+        VariantClear VarPtr(buf(0))             ' 元 (BSTR/SAFEARRAY 等) を解放
+        GetPropertyValue = result
     End If
-    On Error GoTo 0
 End Function
 
 ' 要素のパターンを取得する。GetCurrentPattern = vtable[16]。未サポートなら 0。
