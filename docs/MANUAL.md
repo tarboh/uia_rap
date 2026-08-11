@@ -277,9 +277,16 @@ doc.getElementById("foo").Click
 
 ## `UIA_ElementFromPoint.bas` について（`ref/` のみ）
 
-`ref/` 版には `UIA_ElementFromPoint.bas` という補助モジュールが含まれます。**「座標から要素を取得する」処理だけ `DispCallFunc` で書かれている**のがポイントです。
+`ref/` 版には `UIA_ElementFromPoint.bas` という補助モジュールが含まれます。**「座標から要素を取得する」処理だけ `DispCallFunc` で書かれている**のには理由があります。
 
-UI Automation の `ElementFromPoint` は `POINT` 構造体を**値渡し**するのですが、これが 32bit / 64bit で ABI（引数の渡り方）が異なり、そのまま COM 経由で呼ぶと 64bit でメモリ破壊を起こして Excel がクラッシュする、という厄介な箇所です。そこで、この1メソッドだけ `DispCallFunc` で直接叩いて回避しています。
+UI Automation の `ElementFromPoint` は、引数の `POINT` 構造体を**値渡し**で受け取ります。ところが **VBA（VBE）は構造体（ユーザー定義型）を `ByVal` で渡すことを許していません**。参照設定を入れて `uia.ElementFromPoint(pt)` と普通に書いても、次のコンパイルエラーで弾かれます。
+
+```
+コンパイル エラー:
+ユーザー定義型を ByVal で渡すことはできません。
+```
+
+つまりこのメソッドだけは通常の呼び出しが**そもそもできません**。そこで `DispCallFunc` で VBA のコンパイラを迂回し、構造体をバイナリレベルで渡しています。（さらに 64bit では 8 バイトの `POINT` を 1 つの 64bit 値に詰めて渡す必要があり、`noref/` 版ではこれを算術で組み立てて `CopyMemory` なしで実装しています。）
 
 | 関数 | 戻り | 説明 |
 |---|---|---|
