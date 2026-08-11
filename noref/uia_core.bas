@@ -430,7 +430,17 @@ Public Function GetPropertyValue(ByVal pElem As LongPtr, ByVal propId As Long) A
     Dim v As Variant
     uia_core.UiaCheck UiaInvoke(pElem, 10, "LP", propId, VarPtr(v)), _
                       "IUIAutomationElement.GetCurrentPropertyValue"
-    GetPropertyValue = v
+    ' 一部のプロパティ (LabeledBy / ControllerFor 等) は要素参照 (VT_UNKNOWN) を返す。
+    ' 参照設定が無いと型情報が無く VBA が扱えない Variant になるため、
+    ' オブジェクト型はここで解放して Empty を返す (スカラー/配列だけ外に出す)。
+    If IsObject(v) Then
+        On Error Resume Next
+        Set v = Nothing
+        On Error GoTo 0
+        GetPropertyValue = Empty
+    Else
+        GetPropertyValue = v
+    End If
 End Function
 
 ' 要素のパターンを取得する。GetCurrentPattern = vtable[16]。未サポートなら 0。
