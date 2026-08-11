@@ -988,7 +988,7 @@ Public Property Get prPtnAv_Invoke() As Boolean
 End Property
 
 ' 要素がサポートするプロパティ / パターンをイミディエイトに一覧表示する。
-Public Sub GetInfo()
+Public Sub GetInfo(Optional ByVal verbose As Boolean = False)
     If Alert_Nothing(m_elem, "GetInfo") Then Exit Sub
     SetImmediateCaretToEnd
 
@@ -997,36 +997,55 @@ Public Sub GetInfo()
     Debug.Print "------------------------------"
 
     Dim l_Property() As Long, s_Property() As String, i As Long
+    Dim nm As String, v As Variant, lv As Long, arr As String
     uia_core.PollSupportedProperties m_elem, l_Property, s_Property
+
     For i = 0 To UBound(l_Property)
-        If Not s_Property(i) Like "*Available" Then
-            If l_Property(i) <> 0 Then
-                Dim v As Variant, pname As String
-                v = uia_core.GetPropertyValue(m_elem, l_Property(i))
-                pname = String$(40, " ")
-                Mid$(pname, 1) = s_Property(i)
-                Select Case TypeName(v)
-                    Case "String"
-                        If CStr(v) <> "" Then Debug.Print pname & CStr(v)
-                    Case "Long", "Integer"
-                        If CLng(v) <> 0 Then
-                            If pname Like "ControlType*" Then
-                                Debug.Print pname & CLng(v) & "(" & prShortCtrlTypeName & ")"
-                            Else
-                                Debug.Print pname & CLng(v)
-                            End If
-                        End If
-                    Case "Boolean"
-                        If CBool(v) Then Debug.Print pname & CBool(v)
-                    Case "Double", "Single"
-                        If CDbl(v) <> 0 Then Debug.Print pname & CDbl(v)
-                    Case "Double()", "Long()", "Integer()", "Single()"
-                        Debug.Print pname & JoinVariantArray(v)
-                End Select
-            Else
-                Debug.Print s_Property(i)
-            End If
+        nm = s_Property(i)
+        If nm Like "*Available" Then GoTo NextProp        ' IsXxxPatternAvailable は除外
+
+        If l_Property(i) = 0 Then
+            ' 標準 ID に解決できないプロパティ (名前のみ)。verbose 時だけ出す。
+            If verbose Then Debug.Print nm
+            GoTo NextProp
         End If
+
+        v = uia_core.GetPropertyValue(m_elem, l_Property(i))
+        Select Case TypeName(v)
+            Case "String"
+                If CStr(v) <> "" Then Debug.Print Pad(nm) & CStr(v)
+
+            Case "Long", "Integer"
+                lv = CLng(v)
+                If lv <> 0 Then
+                    ' HeadingLevel の既定値 (None=80050) はノイズなので verbose 時のみ
+                    If (Not verbose) And nm = "HeadingLevel" And lv = 80050 Then GoTo NextProp
+                    If nm = "ControlType" Then
+                        Debug.Print Pad(nm) & lv & "(" & prShortCtrlTypeName & ")"
+                    Else
+                        Debug.Print Pad(nm) & lv
+                    End If
+                End If
+
+            Case "Boolean"
+                If CBool(v) Then Debug.Print Pad(nm) & CBool(v)
+
+            Case "Double", "Single", "Currency"
+                If CDbl(v) <> 0 Then Debug.Print Pad(nm) & CDbl(v)
+
+            Case "Double()", "Long()", "Integer()", "Single()"
+                arr = JoinVariantArray(v)
+                If arr <> "" Then
+                    If nm = "BoundingRectangle" Then
+                        Debug.Print Pad(nm) & FormatLTWH(v)   ' 左,上,幅,高さ
+                    Else
+                        Debug.Print Pad(nm) & arr
+                    End If
+                ElseIf verbose Then
+                    Debug.Print Pad(nm) & "(空)"
+                End If
+        End Select
+NextProp:
     Next
 
     Debug.Print
@@ -1040,6 +1059,27 @@ Public Sub GetInfo()
         Debug.Print s_Pattern(i)
     Next
 End Sub
+
+' 名前を40文字幅で左詰め。40文字以上なら切らずに後ろへ2スペース。
+Private Function Pad(ByVal s As String) As String
+    If Len(s) >= 40 Then
+        Pad = s & "  "
+    Else
+        Pad = s & Space$(40 - Len(s))
+    End If
+End Function
+
+' BoundingRectangle プロパティ (double[4] = 左,上,幅,高さ) をラベル付きで整形する。
+' 注意: prRect / GetBoundingRect は {左,上,右,下} で並びが異なる (UIA の仕様)。
+Private Function FormatLTWH(v As Variant) As String
+    On Error Resume Next
+    If UBound(v) >= 3 Then
+        FormatLTWH = "L=" & CStr(v(0)) & " T=" & CStr(v(1)) & _
+                     " W=" & CStr(v(2)) & " H=" & CStr(v(3))
+    Else
+        FormatLTWH = JoinVariantArray(v)
+    End If
+End Function
 
 ' 数値配列 (Variant) をカンマ区切り文字列にする。
 Private Function JoinVariantArray(v As Variant) As String
